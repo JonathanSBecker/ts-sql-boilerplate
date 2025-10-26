@@ -13,7 +13,7 @@ import SystemError from '../error/SystemError';
 import Session from '../types/session';
 
 /**
- * Returns Session if it exists and valid, returns undefined otherwise.
+ * Returns Session if it exists and is valid, returns undefined otherwise.
  * @param uuid
  */
 export const getSessionIfValid = async (uuid: string) => {

@@ -1,4 +1,4 @@
-import argon2 from 'argon2';
+import argon2id from 'argon2';
 import { Request, Response } from 'express';
 
 import { UpdatePasswordRequest } from './request/update-password';
@@ -7,6 +7,21 @@ import ForbiddenError from '../../error/ForbiddenError';
 import SystemError from '../../error/SystemError';
 import logger from '../../utils/logger';
 
+/**
+ * @api {put} /api/v2/access/update-password Update Password
+ * @apiGroup Access
+ * @apiPermission authenticated user
+ *
+ * @apiDescription Use this endpoint to update a user's password. The request must include
+ * the new password value.
+ *
+ * @apiParam {String} password The new password.
+ *
+ * @apiSuccess {String} updatePassword Successful update of password.
+ *
+ * @apiError NotFoundError The user was not found.
+ * @apiError ServerError An error occurred on the server.
+ */
 const updatePasswordRoute = async (
   req: Request<unknown, unknown, UpdatePasswordRequest>,
   res: Response,
@@ -19,14 +34,14 @@ const updatePasswordRoute = async (
   }
 
   if (
-    !(await argon2.verify(credential.hashedPassword, req.body.currentPassword))
+    !(await argon2id.verify(credential.hashedPassword, req.body.currentPassword))
   ) {
     throw new ForbiddenError();
   }
 
   await updatePassword(
     res.locals.context.user.uuid,
-    await argon2.hash(req.body.currentPassword),
+    await argon2id.hash(req.body.currentPassword),
   );
 
   return res.status(204).send();

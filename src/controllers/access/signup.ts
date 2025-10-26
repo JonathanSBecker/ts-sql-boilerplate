@@ -1,4 +1,4 @@
-import argon2 from 'argon2';
+import argon2id from 'argon2';
 import { Request, Response } from 'express';
 
 import { SignUpRequest } from './request/signup';
@@ -8,53 +8,40 @@ import BadRequestError from '../../error/BadRequestError';
 import ConflictError from '../../error/ConflictError';
 import User from '../../types/user';
 import UserPreferences from '../../types/user-preferences';
-import sendEmail from '../../utils/email';
 import { encodeJWT } from '../../utils/jwt';
-import logger from '../../utils/logger';
 import { getNewSessionForUserAndDevice } from '../../utils/sessions';
 import generateUuid from '../../utils/uuid';
 
-const getWelcomeMessage = (name: string) => `<!DOCTYPE html>
-    <html lang="en">
-      <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-        <title>Welcome to the Platinum Lifestyle</title>
-        <link rel="stylesheet" href="styles.css" />
-      </head>
-      <body>
-        <p style="color: #000000; font-family: Arial, sans-serif">
-          Hey ${name}!<br />
-          Welcome to the Platinum Lifestyle,<br />
-        </p>
-    
-        <p style="color: #000000; font-family: Arial, sans-serif">
-          Our mission is to help people get the most out of themselves, and their lifestyles.<br />
-        </p>
-    
-        <p style="color: #000000; font-family: Arial, sans-serif">
-          You can use the app to track, plan, and schedule your tasks, workouts, meals, focuses, and stressors.<br />
-          Login now at https://platinum.lifestyle<br />
-        </p>
-    
-        <p style="color: #000000; font-family: Arial, sans-serif">
-          Have suggestions? Send them to contact@platinum.lifestyle<br />
-        </p>
-    
-        <p style="color: #000000; font-family: Arial, sans-serif">
-          Cheers,<br />
-          Platinum Support<br />
-        </p>
-        
-        <p style="color: #000000; font-family: Arial, sans-serif">
-          Platinum Lifestyle and PlatinumRain Staff will never ask you for your password.<br />
-          This was an automated email, for assistance please contact support@platinum.lifestyle<br />
-        </p>
-      </body>
-    </html>
-    `;
-
+/**
+ * @api {post} /v2/access/signup Signup
+ * @apiName Signup
+ * @apiGroup Access
+ * @apiPermission none
+ *
+ * @apiParam {String} email Users unique email.
+ * @apiParam {String} [username] Users unique username.
+ * @apiParam {String} firstName Users first name.
+ * @apiParam {String} lastName Users last name.
+ * @apiParam {String} password Users password.
+ * @apiParam {String} userType Type of the user.
+ * @apiParam {String} [phoneNumber] Users contact number.
+ * @apiParam {String[]} [languages] Users preferred languages.
+ * @apiParam {String[]} careerInterestIds Users career interests.
+ * @apiParam {Object} preferences User preferences like staySignedIn, termsAndConditionsAccepted,
+ * receiveSmsNewsletter, receiveEmailNewsletter, and useMfa.
+ * @apiParam {String} referralSource Referral source of the user.
+ * @apiParam {String} [dreamJobDescription] Dream job description of the user.
+ * @apiParam {String} [birthday] Birthday of the user.
+ * @apiParam {String} [companyName] Company name of the user.
+ * @apiParam {String} [title] Title of the user.
+ * @apiParam {Object} [hostData] Host verification data containing front and back photo of the license.
+ *
+ * @apiSuccess {Object} user User's data.
+ * @apiSuccess {String} jwt JSON Web Token (JWT) which to be used for the subsequents API calls.
+ *
+ * @apiError BadRequestError The request can't be processed due to client errors (status code 400).
+ * @apiError ConflictError The request can't be processed because of conflict in the current state (status code 409).
+ */
 export default async function signupRoute(
   req: Request<unknown, unknown, SignUpRequest>,
   res: Response,
@@ -104,19 +91,9 @@ export default async function signupRoute(
 
   user.preferences = preferences;
 
-  const hashedPassword = await argon2.hash(body.password);
+  const hashedPassword = await argon2id.hash(body.password);
 
   await addNewUser(user, preferences, hashedPassword);
-
-  try {
-    await sendEmail(
-      user.email,
-      'Welcome to the Platinum Lifestyle!',
-      getWelcomeMessage(user.firstName),
-    );
-  } catch (e) {
-    logger.error('Unable to send email', JSON.stringify(e));
-  }
 
   const session = await getNewSessionForUserAndDevice(
     user.uuid,

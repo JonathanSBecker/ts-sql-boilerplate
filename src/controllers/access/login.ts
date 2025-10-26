@@ -1,4 +1,4 @@
-import argon2 from 'argon2';
+import argon2id from 'argon2';
 import { Request, Response } from 'express';
 
 import { LoginRequest } from './request/login';
@@ -12,6 +12,17 @@ import { encodeJWT } from '../../utils/jwt';
 import logger from '../../utils/logger';
 import { getNewSessionForUserAndDevice } from '../../utils/sessions';
 
+/**
+ * @api {POST} /api/access/login Login
+ * @apiName Login
+ * @apiGroup Access
+ *
+ * @apiSuccess 200 Object with session JWT and User object populated with user preferences
+ *
+ * @apiError 400 Bad Request Error
+ * @apiError 401 Unauthorized Error
+ * @apiError 500 System Error
+ */
 const loginRoute = async (
   req: Request<unknown, unknown, LoginRequest>,
   res: Response,
@@ -32,7 +43,7 @@ const loginRoute = async (
     throw new SystemError('Unable to retrieve credential');
   }
 
-  if (await argon2.verify(credential.hashedPassword, req.body.password)) {
+  if (await argon2id.verify(credential.hashedPassword, req.body.password)) {
     if (!req.headers.deviceuuid || req.headers.deviceuuid instanceof Array) {
       throw new BadRequestError("Header 'deviceuuid' is required");
     }

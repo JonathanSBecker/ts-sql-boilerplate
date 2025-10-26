@@ -3,6 +3,7 @@ import { Request, Response, Router } from 'express';
 import AccessController from './access';
 import AdminController from './admin';
 import UserController from './user';
+import ExampleController from './example';
 import { adminAuth } from '../middleware/auth/auth-handler';
 import errorWrapper from '../utils/error-wrapper';
 
@@ -14,7 +15,9 @@ apiController.use('/admin', AdminController);
 
 apiController.use('/users', UserController);
 
-// If this needs to bet any more complex, separate out
+apiController.use('/examples', ExampleController);
+
+// If this needs to be any more complex, separate it out
 apiController.get(
   '/status',
   errorWrapper(adminAuth),

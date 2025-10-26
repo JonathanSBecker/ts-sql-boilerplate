@@ -1,0 +1,12 @@
+{
+  "cors": [
+    "https://localhost:3000",
+    "https://localhost:1776",
+    "https://localhost:3306",
+    "https://localhost:3307",
+    "http://localhost:3000",
+    "http://localhost:1776",
+    "http://localhost:3306",
+    "http://localhost:3307"
+  ]
+}

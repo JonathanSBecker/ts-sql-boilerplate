@@ -1,0 +1,58 @@
+services:
+  lifestyle-db:
+    image: mysql:8.0
+    volumes:
+      - db_data:/var/lib/mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: F1shyBusiness
+      MYSQL_DATABASE: boilerplate
+      MYSQL_USER: gemini
+      MYSQL_PASSWORD: P0werOverwhelm!ng
+    ports:
+      - "3306:3306"
+  dbmate-up:
+    image: amacneil/dbmate
+    restart: on-failure
+    volumes:
+      - ./db/migrations:/db/migrations
+    depends_on:
+      - lifestyle-db
+    entrypoint: [ "dbmate", "up" ]
+    environment:
+      DATABASE_URL: mysql://gemini:P0werOverwhelm!ng@lifestyle-db:3306/boilerplate
+  dbmate-down:
+    image: amacneil/dbmate
+    restart: on-failure
+    volumes:
+      - ./db/migrations:/db/migrations
+    depends_on:
+      - lifestyle-db
+    entrypoint: [ "dbmate", "down" ]
+    environment:
+      DATABASE_URL: mysql://gemini:P0werOverwhelm!ng@lifestyle-db:3306/boilerplate
+
+  test-db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: F1shyBusiness
+      MYSQL_DATABASE: boilerplate_test
+      MYSQL_USER: gemini
+      MYSQL_PASSWORD: P0werOverwhelm!ng
+    ports:
+      - "3307:3306"
+  dbmate-up-test-db:
+    extends:
+      service: dbmate-up
+    environment:
+      DATABASE_URL: mysql://gemini:P0werOverwhelm!ng@test-db:3306/boilerplate_test
+  cleanup-test-db:
+    image: mysql:8.0
+    volumes:
+      - ./scripts:/scripts
+    depends_on:
+      - test-db
+    entrypoint: ["sh", "-c", "/scripts/cleanup-test-db.sh"]
+
+volumes:
+  db_data: { }

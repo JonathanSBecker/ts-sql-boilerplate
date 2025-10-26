@@ -6,6 +6,8 @@ import ForbiddenError from '../../error/ForbiddenError';
 import UnauthorizedError from '../../error/UnauthorizedError';
 import { verifyJWT } from '../../utils/jwt';
 import { getSessionIfValid, invalidateSession } from '../../utils/sessions';
+import { getUserPreferences } from '../../db/user-preferences';
+import SystemError from '../../error/SystemError';
 
 const handleAuth = async (req: Request, res: Response) => {
   const authorization = req.headers.authorization || '';
@@ -50,6 +52,12 @@ const handleAuth = async (req: Request, res: Response) => {
 
   if (!user) {
     throw new UnauthorizedError();
+  }
+
+  user.preferences = await getUserPreferences(user?.uuid);
+
+  if (!user.preferences) {
+    throw new SystemError('Unable to retrieve internal user data');
   }
 
   if (!user.isActive) {
